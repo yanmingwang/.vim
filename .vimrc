@@ -25,6 +25,10 @@ Plugin 'zchee/deoplete-jedi'
 Plugin 'Yggdroot/indentLine'
 Plugin 'w0rp/ale'
 Plugin 'rking/ag.vim'
+Plugin 'easymotion/vim-easymotion'
+Plugin 'haya14busa/incsearch.vim'
+Plugin 'haya14busa/incsearch-easymotion.vim'
+Plugin 'haya14busa/incsearch-fuzzy.vim'
 
 Bundle 'YouCompleteMe'
 Bundle 'scrooloose/nerdtree'
@@ -41,7 +45,7 @@ Bundle  'kana/vim-textobj-lastpat'
 Bundle  'kana/vim-textobj-user'
 Bundle  'kana/vim-textobj-line'
 Bundle  'kana/vim-textobj-indent'
-Bundle  'tpope/vim-commentary'
+Bundle 'scrooloose/nerdcommenter'
 Bundle  'kana/vim-textobj-entire'
 Bundle  'kana/vim-textobj-syntax'  
 Bundle  'fatih/vim-go'
@@ -202,10 +206,12 @@ set showfulltag
 " set textwidth=80
 
 "plugins key maps" {{{
-"--commentary plugin,comment a line
-map <leader>/ \\\
+let g:NERDSpaceDelims=1
+map <leader>/ <leader>c<space><CR>
+
 "go back and forth from header file and source file
 "nmap <silent> <leader>f :A<cr>
+
 "open a tag list ivew
 nmap <silent> <leader>ta :TagbarToggle <CR>
 "disable default buffergator keymaps"
@@ -218,11 +224,61 @@ nmap <silent>,o :ZoomWin <cr>
 nmap <leader>b :BufExplorer<cr>
 "}}}                    
 
+
+let g:EasyMotion_smartcase = 1
+"let g:EasyMotion_startofline = 0 " keep cursor colum when JK motion
+map <leader>h <Plug>(easymotion-linebackward)
+map <leader>j <Plug>(easymotion-j)
+map <leader>k <Plug>(easymotion-k)
+map <leader>l <Plug>(easymotion-lineforward)
+
+" <Leader>f{char} to move to {char}
+map  <leader><leader>f <Plug>(easymotion-bd-f)
+nmap <leader><leader>f <Plug>(easymotion-overwin-f)
+
+" s{char}{char} to move to {char}{char}
+nmap s <Plug>(easymotion-overwin-f2)
+
+" Move to line
+map <leader>L <Plug>(easymotion-bd-jk)
+nmap <leader>L <Plug>(easymotion-overwin-line)
+" Move to word
+map  <leader>w <Plug>(easymotion-bd-w)
+nmap <leader>w <Plug>(easymotion-overwin-w)
+
+" 重复上一次操作, 类似repeat插件, 很强大
+map <leader><leader>. <Plug>(easymotion-repeat)
+
+function! s:incsearch_config(...) abort
+  return incsearch#util#deepextend(deepcopy({
+  \   'modules': [incsearch#config#easymotion#module({'overwin': 1})],
+  \   'keymap': {
+  \     "\<CR>": '<Over>(easymotion)'
+  \   },
+  \   'is_expr': 0
+  \ }), get(a:, 1, {}))
+endfunction
+noremap <silent><expr> /  incsearch#go(<SID>incsearch_config())
+noremap <silent><expr> ?  incsearch#go(<SID>incsearch_config({'command': '?'}))
+noremap <silent><expr> g/ incsearch#go(<SID>incsearch_config({'is_stay': 1}))
+
+function! s:config_easyfuzzymotion(...) abort
+  return extend(copy({
+  \   'converters': [incsearch#config#fuzzyword#converter()],
+  \   'modules': [incsearch#config#easymotion#module({'overwin': 1})],
+  \   'keymap': {"\<CR>": '<Over>(easymotion)'},
+  \   'is_expr': 0,
+  \   'is_stay': 1
+  \ }), get(a:, 1, {}))
+endfunction
+
+noremap <silent><expr> <Space>/ incsearch#go(<SID>config_easyfuzzymotion())
+
 " nmap <leader>v :vimgrep /<C-R><C-W>/gj **/*{py,c,cpp}<CR>:copen<CR>
 
 "ack
-"<Leader>c进行搜索，同时不自动打开第一个匹配的文件"
-map <Leader>v :Ack! <C-R><C-W> .<CR>
+"<leader>c进行搜索，同时不自动打开第一个匹配的文件"
+map w<leader>v :Ack! <C-R><C-W> .<CR>
 "调用ag进行搜索
 if executable('Ag')
   let g:ackprg = 'Ag --vimgrep'
@@ -281,13 +337,34 @@ nnoremap ,z zMzv
 "-----------------------------------------------------------------------------
 " CtrlP Settings
 "-----------------------------------------------------------------------------
+" Ctlr-P {{{
+let g:ctrlp_map = '<leader>p'
+let g:ctrlp_cmd = 'CtrlP'
+" let g:ctrlp_map = '<c-p>'
+let g:ctrlp_custom_ignore = {
+    \ 'dir':  '\v[\/]\.(git|hg|svn|rvm)$',
+    \ 'file': '\v\.(exe|so|dll|zip|tar|tar.gz|pyc)$',
+    \ }
+set wildignore+=*.pyc
+set wildignore+=*_build/*
+set wildignore+=*.o
+set wildignore+=tags
+let g:ctrlp_working_path_mode=0
+let g:ctrlp_match_window_bottom=1
+let g:ctrlp_max_height=15
+let g:ctrlp_match_window_reversed=0
+let g:ctrlp_mruf_max=500
+let g:ctrlp_follow_symlinks=1
+
+nmap <leader>p :CtrlP <cr>
+let g:ctrlp_open_multiple_files = 'v'
+
 let g:ctrlp_switch_buffer = 'E'
 let g:ctrlp_tabpage_position = 'c'
 let g:ctrlp_working_path_mode = 'rc'
 let g:ctrlp_root_markers = ['.project.root']
 " let g:ctrlp_custom_ignore = '\v%(/\.%(git|hg|svn)|\.%(class|o)$|/target/)'
 let g:ctrlp_open_new_file = 'r'
-let g:ctrlp_open_multiple_files = '1ri' 
 let g:ctrlp_prompt_mappings = { 
             \ 'PrtSelectMove("j")':   ['<c-n>'], 
             \ 'PrtSelectMove("k")':   ['<c-p>'], 
@@ -325,7 +402,7 @@ nmap <leader>md :%!/usr/local/bin/Markdown.pl --html4tags <cr>
 "}}}
 
 "map leader 1 for display cursorline {{{
-:nnoremap <Leader>1 :set cursorline! cursorcolumn!<CR>
+:nnoremap <leader>1 :set cursorline! cursorcolumn!<CR>
 "}}}
 
 
@@ -346,12 +423,12 @@ nnoremap k gk
 nnoremap <leader>fef :normal! gg=G``<CR>
 
 " upper/lower word
-nmap <leader>u mQviwU`Q
-nmap <leader>l mQviwu`Q
+" nmap <leader>u mQviwU`Q
+" nmap <leader>l mQviwu`Q
 
 " upper/lower first char of word
-nmap <leader>U mQgewvU`Q
-nmap <leader>L mQgewvu`Q
+" nmap <leader>U mQgewvU`Q
+" nmap <leader>L mQgewvu`Q
 
 " cd to the directory containing the file in the buffer
 nmap <silent> <leader>cd :lcd %:h<CR>
@@ -377,7 +454,7 @@ nmap <silent> <leader>fc <ESC>/\v^[< = >]{7}( .*\|$)<CR>
 nmap <leader>hs :set hlsearch! hlsearch?<CR>
 
 " Adjust viewports to the same size
-" map <Leader>= <C-w>=
+" map <leader>= <C-w>=
 
 "}}}
 
@@ -425,20 +502,6 @@ let g:tagbar_type_go = {
 \ }
 "}}}    
 
-" Ctlr-P {{{
-nmap <leader>p :CtrlP <cr>
-let g:ctrlp_open_multiple_files = 'v'
-
-set wildignore+=*/tmp/*,*.so,*.swp,*.zip
-let g:ctrlp_max_height = 100
-let g:ctrlp_custom_ignore = {
-            \ 'dir':  '\v[\/]\.(git)$',
-            \ 'file': '\v\.(log|jpg|png|jpeg)$',
-            \ }
-set wildignore+=*.pyc
-set wildignore+=*_build/*
-set wildignore+=*.o
-"}}}                      
 
 nnoremap <leader><tab> :tabnext<CR>
 nnoremap <C-t>     :tabnew<CR>
@@ -493,14 +556,9 @@ let g:flake8_ignore="E501,E128,C901"
 let g:pep8_ignore="E501,E128,W601,C901"
 let g:pymode_lint_ignore = "E2,E501,E601,128,C901"
 
-" auto reload vimrc configuration {{{
- au BufWritePost .vimrc so ~/.vimrc
- nmap <leader>V :tabedit $MYVIMRC<CR>
-" }}}
+" autocmd FileType gitcommit DiffGitCached | wincmd p
 
-autocmd FileType gitcommit DiffGitCached | wincmd p
-
-noremap <Leader><Leader> <C-^>
+noremap <leader><leader> <C-^>
 
 let g:ale_sign_column_always = 1
 let g:ale_sign_error = '>>'
@@ -511,10 +569,10 @@ let g:ale_echo_msg_warning_str = 'W'
 let g:ale_echo_msg_format = '[%linter%] %s [%severity%]'
 
 inoremap jj <Esc> " Esc is so far away without this mapping...
-" noremap <Leader>i :set list!<CR>
+" noremap <leader>i :set list!<CR>
 nmap <silent> <leader>cf <ESC>/\v^[<=>]{7}( .*\|$)<CR>
 
-map <silent> <Leader>vv <plug>EgMapGrepCurrentWord_v
+map <silent> <leader>vv <plug>EgMapGrepCurrentWord_v
 let g:EasyGrepHidden = 0
 let g:EasyGrepExtraWarnings=0
 
@@ -566,3 +624,5 @@ let g:indentLine_char='¦'
 " 使indentline生效
 let g:indentLine_enabled = 1
 set runtimepath^=~/.vim/bundle/ag
+set autochdir
+set tags=tags;
