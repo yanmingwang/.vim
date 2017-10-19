@@ -1,9 +1,9 @@
 " VIM Configuration File
-" Author: Michael.Wang 
+" Author: Michael.Wang
 "
 set nocompatible
 filetype off
-" execute pathogen#infect('bundle/{}', '~/src/vim/bundle/{}')
+execute pathogen#infect('bundle/{}', '~/src/vim/bundle/{}')
 
 " set the runtime path to include Vundle and initialize
 set rtp+=~/.vim/bundle/Vundle.vim
@@ -12,12 +12,11 @@ call vundle#begin()
 autocmd FileType python setlocal completeopt-=preview
 
 "color scheme
-Plugin 'davidhalter/jedi-vim' 
+Plugin 'davidhalter/jedi-vim'
 Plugin 'nvie/vim-flake8'
 Plugin 'Vimjas/vim-python-pep8-indent'
 Plugin 'tell-k/vim-autopep8'
 Plugin 'VundleVim/Vundle.vim'
-Plugin 'tpope/vim-fugitive'
 Plugin 'rstacruz/sparkup', {'rtp': 'vim/'}
 Plugin 'vim-airline/vim-airline'
 Plugin 'vim-airline/vim-airline-themes'
@@ -29,8 +28,10 @@ Plugin 'easymotion/vim-easymotion'
 Plugin 'haya14busa/incsearch.vim'
 Plugin 'haya14busa/incsearch-easymotion.vim'
 Plugin 'haya14busa/incsearch-fuzzy.vim'
+Plugin 'Valloric/YouCompleteMe'
+Plugin 'gregsexton/gitv'
 
-Bundle 'YouCompleteMe'
+Bundle 'tpope/vim-fugitive'
 Bundle 'scrooloose/nerdtree'
 Bundle  'majutsushi/tagbar'
 Bundle 'godlygeek/tabular'
@@ -47,7 +48,7 @@ Bundle  'kana/vim-textobj-line'
 Bundle  'kana/vim-textobj-indent'
 Bundle 'scrooloose/nerdcommenter'
 Bundle  'kana/vim-textobj-entire'
-Bundle  'kana/vim-textobj-syntax'  
+Bundle  'kana/vim-textobj-syntax'
 Bundle  'fatih/vim-go'
 
 Bundle  'Raimondi/delimitMate'
@@ -72,6 +73,8 @@ let mapleader=','
  nmap <leader>V :tabedit $MYVIMRC<CR>
 " }}}
 
+au FileType python setlocal formatprg=autopep8\ -
+
 "search" {{{
 set incsearch
 set hls
@@ -86,7 +89,7 @@ nnoremap <silent> # #zz
 nnoremap <silent> g* g*zz
 nnoremap <silent> g# g#zz
 vnoremap <C-r> "hy:%s/<C-r>h//gc<left><left><left>
-"}}}       
+"}}}
 
 "some common configs {{{
 "map visual mode vertical selectoin"
@@ -94,13 +97,13 @@ vnoremap <C-r> "hy:%s/<C-r>h//gc<left><left><left>
 set fenc=utf-8
 set termencoding=utf-8
 set fileencodings=utf-8,chinese
-set encoding=utf-8  "if not set, the powerline plugins won't work 
+set encoding=utf-8  "if not set, the powerline plugins won't work
 if has("win32") || has("win64")
     set fileencoding=chinese
 endif
 
-"这个是安装字体后 必须设置此项" 
-let g:airline_powerline_fonts = 1   
+"这个是安装字体后 必须设置此项"
+let g:airline_powerline_fonts = 1
 
  "打开tabline功能,方便查看Buffer和切换,省去了minibufexpl插件
 let g:airline#extensions#tabline#enabled = 1
@@ -222,7 +225,7 @@ nmap <silent>,o :ZoomWin <cr>
 
 "config for BufferNavigator"
 nmap <leader>b :BufExplorer<cr>
-"}}}                    
+"}}}
 
 
 let g:EasyMotion_smartcase = 1
@@ -278,7 +281,8 @@ noremap <silent><expr> <Space>/ incsearch#go(<SID>config_easyfuzzymotion())
 
 "ack
 "<leader>c进行搜索，同时不自动打开第一个匹配的文件"
-map w<leader>v :Ack! <C-R><C-W> .<CR>
+map <leader>v :Ag! --vimgrep <C-R><C-W> .<CR>
+
 "调用ag进行搜索
 if executable('Ag')
   let g:ackprg = 'Ag --vimgrep'
@@ -293,6 +297,7 @@ let g:ack_autoclose = 1
 let g:ack_use_cword_for_empty_search = 1
 "部分功能受限，但对于大项目搜索速度较慢时可以尝试开启
 "let g:ack_use_dispatch = 1
+let g:ag_working_path_mode="r"
 
 "nerdTree plugin config {{{
 " autocmd vimenter * NERDTree
@@ -322,7 +327,7 @@ function! MyFoldText()
     let fillcharcount = windowwidth - len(line) - len(foldedlinecount) - 4
     return line . ' …' . repeat(" ",fillcharcount) . foldedlinecount . ' '
 endfunction
-set foldtext=MyFoldText()               
+set foldtext=MyFoldText()
 
 "c/c++/javascript/java fold method
 autocmd filetype c,cpp,javascript,java set foldmarker={,}
@@ -331,8 +336,19 @@ nnoremap zO zCzO
 nnoremap <Space> za
 vnoremap <Space> za
 nnoremap ,z zMzv
-"}}}                         
+"}}}
 
+"-----------------------------------------------------------------------------
+" Fugitive
+"-----------------------------------------------------------------------------
+" Thanks to Drew Neil
+autocmd User fugitive
+            \ if fugitive#buffer().type() =~# '^\%(tree\|blob\)$' |
+            \  noremap <buffer> .. :edit %:h<cr> |
+            \ endif
+autocmd BufReadPost fugitive://* set bufhidden=delete
+
+nmap ,gs :Git status<cr>
 
 "-----------------------------------------------------------------------------
 " CtrlP Settings
@@ -365,19 +381,19 @@ let g:ctrlp_working_path_mode = 'rc'
 let g:ctrlp_root_markers = ['.project.root']
 " let g:ctrlp_custom_ignore = '\v%(/\.%(git|hg|svn)|\.%(class|o)$|/target/)'
 let g:ctrlp_open_new_file = 'r'
-let g:ctrlp_prompt_mappings = { 
-            \ 'PrtSelectMove("j")':   ['<c-n>'], 
-            \ 'PrtSelectMove("k")':   ['<c-p>'], 
-            \ 'PrtHistory(-1)':       ['<c-j>', '<down>'], 
-            \ 'PrtHistory(1)':        ['<c-i>', '<up>'] 
-            \ } 
+let g:ctrlp_prompt_mappings = {
+            \ 'PrtSelectMove("j")':   ['<c-n>'],
+            \ 'PrtSelectMove("k")':   ['<c-p>'],
+            \ 'PrtHistory(-1)':       ['<c-j>', '<down>'],
+            \ 'PrtHistory(1)':        ['<c-i>', '<up>']
+            \ }
 map ,fb :CtrlPBuffer<cr>
 map ,ff :CtrlPCurFile<cr>
 map ,fr :CtrlP<cr>
 map ,fm :CtrlPMixed<cr>
 
 "忽略后缀为.o，.ko，.gz的文
-let NERDTreeIgnore = ['.*\.o$','.*\.ko$','.*\.gz$', '.*\.pyc', '.*\.gitignore', '.DS_Store'] 
+let NERDTreeIgnore = ['.*\.o$','.*\.ko$','.*\.gz$', '.*\.pyc', '.*\.gitignore', '.DS_Store']
 " bufkill bd's: really do not mess with NERDTree buffer
 "nnoremap <silent> <backspace> :BD<cr>
 "nnoremap <silent> <s-backspace> :BD!<cr>
@@ -415,7 +431,7 @@ nmap ,c <c-w>c
 nmap ,<tab> <c-w><c-w>
 nnoremap j gj
 nnoremap k gk
-"}}}                             
+"}}}
 
 "maps from janus{{{
 
@@ -468,8 +484,9 @@ syntax enable
 colorscheme blackboard
 if has("gui_running")
     colorscheme solarized
+    let g:solarized_termcolors=256
 endif
-"}}}                                  
+"}}}
 
 "config tagbar plugin {{{
 let Tlist_Use_Right_Window = 1
@@ -500,7 +517,7 @@ let g:tagbar_type_go = {
     \ 'ctagsbin'  : 'gotags',
     \ 'ctagsargs' : '-sort -silent'
 \ }
-"}}}    
+"}}}
 
 
 nnoremap <leader><tab> :tabnext<CR>
@@ -515,7 +532,7 @@ nnoremap <C-S-RETURN> :bprevious<CR>
 
 " Tab操作快捷方式!
 nnoremap <C-TAB> :tabnext<CR>
-nnoremap <C-S-TAB> :tabprev<CR>  
+nnoremap <C-S-TAB> :tabprev<CR>
 
 set completeopt=longest,menu	"让Vim的补全菜单行为与一般IDE一致(参考VimTip1228)
 autocmd InsertLeave * if pumvisible() == 0|pclose|endif	"离开插入模式后自动关闭预览窗口
@@ -526,8 +543,12 @@ inoremap <expr> <Up>       pumvisible() ? "\<C-p>" : "\<Up>"
 inoremap <expr> <PageDown> pumvisible() ? "\<PageDown>\<C-p>\<C-n>" : "\<PageDown>"
 inoremap <expr> <PageUp>   pumvisible() ? "\<PageUp>\<C-p>\<C-n>" : "\<PageUp>"
 
+hi BadWhitespace guifg=gray guibg=red ctermfg=gray ctermbg=red
+au BufRead,BufNewFile *.py,*.pyw,*.c,*.h match BadWhitespace /\s\+$/
+
 
 "youcompleteme  默认tab  s-tab 和自动补全冲突
+let g:ycm_python_binary_path = 'python'
 let g:ycm_autoclose_preview_window_after_completion = "1"
 let g:ycm_key_list_select_completion = ['<Down>']
 let g:ycm_key_list_previous_completion = ['<Up>']
@@ -544,7 +565,7 @@ let g:ycm_collect_identifiers_from_comments_and_strings = 0
 
 nnoremap <leader>jd :YcmCompleter GoToDefinitionElseDeclaration<CR> " 跳转到定义处
 
-"using flake8 as a python syntax checker 
+"using flake8 as a python syntax checker
 let g:syntastic_python_checkers=['flake8']
 let g:syntastic_python_flake8_args='--ignore=E501,E225'
 
@@ -572,57 +593,51 @@ inoremap jj <Esc> " Esc is so far away without this mapping...
 " noremap <leader>i :set list!<CR>
 nmap <silent> <leader>cf <ESC>/\v^[<=>]{7}( .*\|$)<CR>
 
-map <silent> <leader>vv <plug>EgMapGrepCurrentWord_v
-let g:EasyGrepHidden = 0
-let g:EasyGrepExtraWarnings=0
-
-let g:EasyGrepMode = 2     " All:0, Open Buffers:1, TrackExt:2, 
-let g:EasyGrepCommand = 0  " Use vimgrep:0, grepprg:1
-let g:EasyGrepRecursive  = 1 " Recursive searching
-let g:EasyGrepIgnoreCase = 0 " not ignorecase:0
-let g:EasyGrepFilesToExclude = "*.bak, *~, cscope.*, *.a, *.o, *.pyc, *.bak, *.html"   
-
 " jedi-vim
 let g:jedi#use_tabs_not_buffers = 0
 let g:jedi#goto_assignments_command = "<leader>g"
 let g:jedi#goto_definitions_command = "<leader>d"
-" let g:jedi#documentation_command = "<leader>"
 let g:jedi#usages_command = "<leader>u"
 let g:jedi#completions_command = "<C-Space>"
+let g:jedi#documentation_command = "K"
 let g:jedi#rename_command = "<leader>r"
 let g:jedi#show_call_signatures = "1"
-let g:jedi#completions_enabled = 0
-let g:deoplete#sources#jedi#python_path = '~/workspace'
-let g:deoplete#sources#jedi#extra_path = ['~/workspace/phoenix', '~/workspace/ashes']
+let g:jedi#completions_enabled = 1
 
 " deoplete.vim
-" credit: https://gist.github.com/zchee/c314e63ae8b6bea50bb4
+let g:deoplete#sources#jedi#python_path = '~/workspace'
+let g:deoplete#sources#jedi#extra_path = ['~/workspace/phoenix', '~/workspace/ashes']
 let g:deoplete#enable_at_startup = 1
+let g:deoplete#max_list = 10
 set completeopt+=noinsert
 set completeopt-=preview
 let g:deoplete#enable_ignore_case = 'ignorecase'
 let g:deoplete#auto_completion_start_length = 0
 let g:min_pattern_length = 0
-" https://github.com/Shougo/deoplete.nvim/issues/117
-
 let g:deoplete#ignore_sources = {}
 let g:deoplete#ignore_sources._ = ['buffer', 'vim', 'member']
 let g:deoplete#sources#go = 'vim-go'
-
 inoremap <expr><C-n> deoplete#mappings#manual_complete()
 
-if exists(':DeopleteEnable')
+" if exists(':DeopleteEnable')
   let g:jedi#completions_enabled = 0
   let g:jedi#auto_vim_configuration = 0
   let g:jedi#smart_auto_mappings = 0
-  let g:jedi#show_call_signatures = 0
-endif
+" endif
 
 " 支持任意ASCII码，也可以使用特殊字符：¦, ┆, or │ ，但只在utf-8编码下有效
-let g:indentLine_char='¦'    
+let g:indentLine_char='¦'
+
+" 使用系统剪贴板
+set clipboard=unnamed
+
+nmap <leader>gv :Gitv --all<cr>
+
+autocmd FileType python noremap <buffer> <F8> :call !autopep8 --in-place --aggressive --aggressive<CR>
+autocmd BufWritePre * :%s/\s\+$//e
 
 " 使indentline生效
 let g:indentLine_enabled = 1
 set runtimepath^=~/.vim/bundle/ag
-set autochdir
+" set autochdir
 set tags=tags;
